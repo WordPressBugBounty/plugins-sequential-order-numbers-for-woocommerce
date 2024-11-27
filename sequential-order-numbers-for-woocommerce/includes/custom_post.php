@@ -10,20 +10,20 @@ class BeRocket_Order_Numbers_custom_post extends BeRocket_custom_post_class {
     function __construct() {
         $this->post_name = 'br_order_numbers';
         $this->post_settings = array(
-            'label'  => __( 'Order Numbers', 'BeRocket_Sequential_Order_Numbers_domain' ),
+            'label'  => 'Order Numbers',
             'labels' => array(
-                'menu_name'          => _x( 'Order Numbers', 'Admin menu name', 'BeRocket_Sequential_Order_Numbers_domain' ),
-                'add_new_item'       => __( 'Add New Order Number', 'BeRocket_Sequential_Order_Numbers_domain' ),
-                'edit'               => __( 'Edit', 'BeRocket_Sequential_Order_Numbers_domain' ),
-                'edit_item'          => __( 'Edit Order Number', 'BeRocket_Sequential_Order_Numbers_domain' ),
-                'new_item'           => __( 'New Order Number', 'BeRocket_Sequential_Order_Numbers_domain' ),
-                'view'               => __( 'View Order Numbers', 'BeRocket_Sequential_Order_Numbers_domain' ),
-                'view_item'          => __( 'View Order Number', 'BeRocket_Sequential_Order_Numbers_domain' ),
-                'search_items'       => __( 'Search Order Numbers', 'BeRocket_Sequential_Order_Numbers_domain' ),
-                'not_found'          => __( 'No Order Numbers found', 'BeRocket_Sequential_Order_Numbers_domain' ),
-                'not_found_in_trash' => __( 'No Order Numbers found in trash', 'BeRocket_Sequential_Order_Numbers_domain' ),
+                'menu_name'          => 'Order Numbers',
+                'add_new_item'       => 'Add New Order Number',
+                'edit'               => 'Edit',
+                'edit_item'          => 'Edit Order Number',
+                'new_item'           => 'New Order Number',
+                'view'               => 'View Order Numbers',
+                'view_item'          => 'View Order Number',
+                'search_items'       => 'Search Order Numbers',
+                'not_found'          => 'No Order Numbers found',
+                'not_found_in_trash' => 'No Order Numbers found in trash',
             ),
-            'description'     => __( 'This is where you can add Order Numbers.', 'BeRocket_Sequential_Order_Numbers_domain' ),
+            'description'     => 'This is where you can add Order Numbers.',
             'public'          => true,
             'show_ui'         => true,
             'capability_type' => 'post',
@@ -44,9 +44,6 @@ class BeRocket_Order_Numbers_custom_post extends BeRocket_custom_post_class {
             'reset_number'  => '',
             'order_text'    => array(),
         );
-        $this->add_meta_box('conditions', __( 'Conditions', 'BeRocket_Sequential_Order_Numbers_domain' ));
-        $this->add_meta_box('number_order_settings', __( 'Order Number Settings', 'BeRocket_Sequential_Order_Numbers_domain' ));
-        $this->add_meta_box('order_preview', __( 'Preview', 'BeRocket_Sequential_Order_Numbers_domain' ), false, 'side');
         parent::__construct();
         add_filter('berocket_seq_order_numbers_types', array($this, 'condition_types'));
         add_filter('brfr_berocket_seq_number_order_number_text_selector', array($this, 'number_text_selector'), 20, 4);
@@ -59,6 +56,26 @@ class BeRocket_Order_Numbers_custom_post extends BeRocket_custom_post_class {
         //CONDITIONS CHECK
         add_filter('berocket_seq_order_numbers_check_type_free', array($this, 'condition_check_free'), 10, 3);
         add_filter('berocket_seq_order_numbers_check_type_payment_method', array($this, 'condition_check_payment_method'), 10, 3);
+    }
+
+    function init_translation() {
+        $this->post_settings['label']  = __( 'Order Numbers', 'BeRocket_Sequential_Order_Numbers_domain' );
+        $this->post_settings['labels'] = array(
+            'menu_name'          => _x( 'Order Numbers', 'Admin menu name', 'BeRocket_Sequential_Order_Numbers_domain' ),
+            'add_new_item'       => __( 'Add New Order Number', 'BeRocket_Sequential_Order_Numbers_domain' ),
+            'edit'               => __( 'Edit', 'BeRocket_Sequential_Order_Numbers_domain' ),
+            'edit_item'          => __( 'Edit Order Number', 'BeRocket_Sequential_Order_Numbers_domain' ),
+            'new_item'           => __( 'New Order Number', 'BeRocket_Sequential_Order_Numbers_domain' ),
+            'view'               => __( 'View Order Numbers', 'BeRocket_Sequential_Order_Numbers_domain' ),
+            'view_item'          => __( 'View Order Number', 'BeRocket_Sequential_Order_Numbers_domain' ),
+            'search_items'       => __( 'Search Order Numbers', 'BeRocket_Sequential_Order_Numbers_domain' ),
+            'not_found'          => __( 'No Order Numbers found', 'BeRocket_Sequential_Order_Numbers_domain' ),
+            'not_found_in_trash' => __( 'No Order Numbers found in trash', 'BeRocket_Sequential_Order_Numbers_domain' ),
+        );
+        $this->post_settings['description'] = __( 'This is where you can add Order Numbers.', 'BeRocket_Sequential_Order_Numbers_domain' );
+        $this->add_meta_box('conditions', __( 'Conditions', 'BeRocket_Sequential_Order_Numbers_domain' ));
+        $this->add_meta_box('number_order_settings', __( 'Order Number Settings', 'BeRocket_Sequential_Order_Numbers_domain' ));
+        $this->add_meta_box('order_preview', __( 'Preview', 'BeRocket_Sequential_Order_Numbers_domain' ), false, 'side');
     }
     public function conditions($post) {
         $options = $this->get_option( $post->ID );
@@ -158,7 +175,7 @@ class BeRocket_Order_Numbers_custom_post extends BeRocket_custom_post_class {
     }
     public function condition_check_payment_method($show_it, $condition, $options) {
         $order_id = $options['order_id'];
-        $payment_method = get_post_meta($order_id, '_payment_method', true);
+        $payment_method = $options['order']->get_payment_method();
         $show_it = $payment_method == $condition['payment_method'];
         return $show_it;
     }

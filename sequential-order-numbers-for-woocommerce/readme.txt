@@ -4,8 +4,8 @@ Contributors: berocket, dholovnia
 Donate link: https://berocket.com?utm_source=wordpress_org&utm_medium=donate&utm_campaign=BeRocket_Order_Numbers
 Tags: sequential order number, sequential order, woocommerce sequential order number, order number, sequential number, woocommerce, order, woocommerce order number, sequential order numbers for woocommerce, numeration, shop, woocommerce order
 Requires at least: 5.0
-Tested up to: 6.6
-Stable tag: 3.6.0
+Tested up to: 6.7
+Stable tag: 3.6.1
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -58,6 +58,12 @@ Sequential Order Numbers for WooCommerce - Plugin for change woocommerce orders 
 ---
 
 == Changelog ==
+
+= 3.6.1 =
+* Enhancement - Compatibility version: Wordpress 6.7 and WooCommerce 9.4
+* Fix - Translation init errors with WordPress 6.7
+* Fix - User role type
+* Fix - WooCommerce HPOS compatibility
 
 = 3.6.0 =
 * Enhancement - Compatibility version: WooCommerce 9.3

@@ -7,6 +7,12 @@ class BeRocket_Order_Numbers_Paid extends BeRocket_plugin_variations {
     public $condition_types;
     public $text_types;
     function __construct () {
+        parent::__construct();
+        add_action( 'berocket_sequential_order_number_after_construct', array( $this, 'after_construct' ) );
+        add_action( 'admin_init', array( $this, 'admin_init' ) );
+        add_action( 'init', array( $this, 'init_translation' ), 1 );
+    }
+    function init_translation() {
         $this->condition_types = array(
             'total_price'   => __( 'Total Price', 'BeRocket_Sequential_Order_Numbers_domain' ),
             'item_count'    => __( 'Products Count', 'BeRocket_Sequential_Order_Numbers_domain' ),
@@ -26,10 +32,6 @@ class BeRocket_Order_Numbers_Paid extends BeRocket_plugin_variations {
             'plugin_name' => 'BeRocket_Order_Numbers',
             'domain' => 'BeRocket_Sequential_Order_Numbers_domain',
         );
-        parent::__construct();
-        add_action( 'berocket_sequential_order_number_after_construct', array( $this, 'after_construct' ) );
-        add_action( 'admin_init', array( $this, 'admin_init' ) );
-
         //CONDITIONS HTML
         foreach( $this->condition_types as $cond_slug => $cond_name ) {
             add_filter('berocket_seq_order_numbers_type_'.$cond_slug, array($this, 'condition_'.$cond_slug), 10, 3);
@@ -143,7 +145,7 @@ class BeRocket_Order_Numbers_Paid extends BeRocket_plugin_variations {
         $html = br_supcondition_equal($name, $options);
         $order = self::get_last_order();
         if( $order !== false ) {
-            $meta = get_post_meta($order->ID);
+            $meta = self::get_order_data($order);
             $options['meta_key'] = (empty($options['meta_key']) ? '' : $options['meta_key']);
             $options['meta_value'] = (empty($options['meta_value']) ? '' : $options['meta_value']);
             if( ! empty($options['meta_key']) && ! isset($meta[$options['meta_key']]) ) {
@@ -161,7 +163,7 @@ class BeRocket_Order_Numbers_Paid extends BeRocket_plugin_variations {
         return $html;
     }
     public function condition_check_post_meta($show_it, $condition, $options) {
-        $meta_val = get_post_meta($options['order_id'], $condition['meta_key'], true);
+        $meta_val = $options['order']->get_meta($condition['meta_key'], true);
         $show_it = ( $meta_val == $condition['meta_value'] || (empty($meta_val) && empty($condition['meta_value'])) );
         if( $condition['equal'] == 'not_equal' ) {
             $show_it = ! $show_it;
@@ -172,7 +174,7 @@ class BeRocket_Order_Numbers_Paid extends BeRocket_plugin_variations {
         $html = br_supcondition_equal($name, $options);
         $order = self::get_last_order();
         if( $order !== false ) {
-            $meta = get_post_meta($order->ID);
+            $meta = self::get_order_data($order);
             $options['meta_key'] = (empty($options['meta_key']) ? '' : $options['meta_key']);
             $options['meta_value'] = (empty($options['meta_value']) ? '' : $options['meta_value']);
             if( ! empty($options['meta_key']) && ! isset($meta[$options['meta_key']]) ) {
@@ -186,7 +188,7 @@ class BeRocket_Order_Numbers_Paid extends BeRocket_plugin_variations {
         return $html;
     }
     public function condition_check_custom_meta($show_it, $condition, $options) {
-        $meta_val = get_post_meta($options['order_id'], $condition['meta_key'], true);
+        $meta_val = $options['order']->get_meta($condition['meta_key'], true);
         $show_it = ( $meta_val == $condition['meta_value'] || (empty($meta_val) && empty($condition['meta_value'])) );
         if( $condition['equal'] == 'not_equal' ) {
             $show_it = ! $show_it;
@@ -408,19 +410,19 @@ class BeRocket_Order_Numbers_Paid extends BeRocket_plugin_variations {
             $order->update_status( wc_clean( $_REQUEST['order_status'] ) );
         }
         if( ! empty($_REQUEST['br_bulk_number_text']) ) {
-            $new_order_id = get_post_meta($post_id, '_sequential_order_number_id', true);
+            $new_order_id = $order->get_meta('_sequential_order_number_id', true);
             if( empty($new_order_id) ) {
                 $new_order_id = $post_id;
             }
             $additional = array('new_order_id' => $new_order_id, 'options' => $options, 'seq_options' => false, 'seq_id' => false, 'order_id' => $post_id, 'order' => $order);
             $order_number = $BeRocket_Order_Numbers->generate_number_for_order($_REQUEST['br_bulk_number_text'], $additional);
 
-            update_post_meta($post_id, '_sequential_order_number', $order_number);
+            $order->update_meta_data('_sequential_order_number', $order_number);
         }
         if( ! empty($_REQUEST['br_bulk_number_text_reset']) ) {
-            $order_number = get_post_meta($post_id, '_start_sequential_order_number', true);
+            $order_number = $order->get_meta('_start_sequential_order_number', true);
             if( ! empty($order_number) ) {
-                update_post_meta($post_id, '_sequential_order_number', $order_number);
+                $order->update_meta_data('_sequential_order_number', $order_number);
             }
         }
     }
@@ -478,7 +480,7 @@ class BeRocket_Order_Numbers_Paid extends BeRocket_plugin_variations {
     public function selector_type_post_meta($type_name, $name, $type_data) {
         $order = self::get_last_order();
         if( $order !== false ) {
-            $meta = get_post_meta($order->ID);
+            $meta = self::get_order_data($order);
             $type_data['meta_key'] = (empty($type_data['meta_key']) ? '' : $type_data['meta_key']);
             $type_data['meta_value'] = (isset($type_data['meta_value']) ? $type_data['meta_value'] : '');
             if( ! empty($type_data['meta_key']) && ! isset($meta[$type_data['meta_key']]) ) {
@@ -544,7 +546,7 @@ class BeRocket_Order_Numbers_Paid extends BeRocket_plugin_variations {
         return $html;
     }
     public function generate_number_user_role($number, $options, $additional) {
-        $post_author_id = intval(get_post_meta( $additional['order_id'], '_customer_user', true ));
+        $post_author_id = $additional['order']->get_customer_id();
         if( ! $post_author_id ) return $number;
         $user_info = get_userdata($post_author_id);
         $user_role = array_pop($user_info->roles);
@@ -567,14 +569,14 @@ class BeRocket_Order_Numbers_Paid extends BeRocket_plugin_variations {
         return $number . $additional['order']->get_item_count();
     }
     public function generate_number_post_meta($number, $options, $additional) {
-        $meta_val = get_post_meta($additional['order_id'], $options['meta_key'], true);
+        $meta_val = $additional['order']->get_meta($options['meta_key'], true);
         if( $meta_val === false || $meta_val == '' ) {
             $meta_val = $options['meta_value'];
         }
         return $number . $meta_val;
     }
     public function generate_number_custom_meta($number, $options, $additional) {
-        $meta_val = get_post_meta($additional['order_id'], $options['meta_key'], true);
+        $meta_val = $additional['order']->get_meta($options['meta_key'], true);
         if( $meta_val === false || $meta_val == '' ) {
             $meta_val = $options['meta_value'];
         }
@@ -600,15 +602,27 @@ class BeRocket_Order_Numbers_Paid extends BeRocket_plugin_variations {
         $html .= __('Custom Post Meta from order. <br>First input field is post meta name, second input field is default value if post meta not exist or empty', 'BeRocket_Sequential_Order_Numbers_domain');
         return $html;
     }
+    public static function get_order_data($order) {
+        $meta = array();
+        if( ! empty($order) ) {
+            $meta_orders = $order->get_meta_data();
+            if( is_array($meta_orders) ) {
+                foreach($meta_orders as $meta_order) {
+                    $order_data = $meta_order->get_data();
+                    $meta[$order_data['key']] = $order_data['value'];
+                }
+            }
+        }
+        return $meta;
+    }
     public static function get_last_order() {
         $args = array(
             'numberposts' => 1,
             'orderby' => 'post_date',
             'order' => 'DESC',
-            'post_type' => 'shop_order',
             'post_status' => 'any',
         );
-        $recent_posts = wp_get_recent_posts( $args, OBJECT );
+        $recent_posts = wc_get_orders( $args );
         if( ! empty($recent_posts) && is_array($recent_posts) && count($recent_posts) ) {
             $order = array_pop($recent_posts);
         } else {
