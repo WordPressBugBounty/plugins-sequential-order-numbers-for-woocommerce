@@ -7,6 +7,7 @@ foreach (glob(__DIR__ . "/includes/*.php") as $filename)
 {
     include_once($filename);
 }
+include_once(plugin_dir_path( __FILE__ ) . "includes/admin/funnels.php");
 
 class BeRocket_Order_Numbers extends BeRocket_Framework {
     public $info, $defaults, $values;
